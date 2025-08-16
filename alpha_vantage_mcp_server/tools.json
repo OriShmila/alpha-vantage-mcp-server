@@ -1,5 +1,5 @@
 {
-  "name": "AlphaVantageAPI",
+  "name": "AlphaVantage",
   "tools": [
     {
       "name": "get_current_stock_quote",
