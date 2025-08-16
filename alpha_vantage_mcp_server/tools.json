@@ -1,0 +1,2569 @@
+{
+  "name": "AlphaVantageAPI",
+  "tools": [
+    {
+      "name": "get_current_stock_quote",
+      "description": "Get current stock quote for a symbol including price, volume, and basic metrics. Data is delayed up to 15 minutes",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Stock ticker symbol (e.g., 'AAPL', 'MSFT', 'GOOGL')"
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Current stock quote data with clean keys",
+        "properties": {
+          "quote": {
+            "type": "object",
+            "properties": {
+              "symbol": { "type": "string", "description": "Stock symbol" },
+              "open": { "type": "string", "description": "Opening price" },
+              "high": { "type": "string", "description": "Highest price" },
+              "low": { "type": "string", "description": "Lowest price" },
+              "price": { "type": "string", "description": "Current price" },
+              "volume": { "type": "string", "description": "Trading volume" },
+              "latest_trading_day": {
+                "type": "string",
+                "description": "Latest trading day (YYYY-MM-DD format)"
+              },
+              "previous_close": {
+                "type": "string",
+                "description": "Previous close price"
+              },
+              "change": { "type": "string", "description": "Price change" },
+              "change_percent": {
+                "type": "string",
+                "description": "Percentage change"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_stock_time_series",
+      "description": "Retrieve historical stock price data and trading volumes over various time periods including minute-by-minute, daily, weekly, and monthly intervals with optional dividend adjustments",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Stock ticker symbol (e.g., 'AAPL', 'TSLA', 'MSFT')"
+          },
+          "interval": {
+            "type": "string",
+            "description": "Data frequency: minute intervals (1min-60min) for intraday, or daily/weekly/monthly",
+            "enum": [
+              "1min",
+              "5min",
+              "15min",
+              "30min",
+              "60min",
+              "daily",
+              "weekly",
+              "monthly"
+            ],
+            "default": "daily"
+          },
+          "adjusted": {
+            "type": "boolean",
+            "description": "Apply dividend/split adjustments for accurate historical comparisons",
+            "default": false
+          },
+
+          "outputsize": {
+            "type": "string",
+            "description": "Data amount: 'compact' (last 100 points), 'full' (20+ years)",
+            "enum": ["compact", "full"],
+            "default": "compact"
+          },
+          "month": {
+            "type": "string",
+            "description": "Target month for intraday data in YYYY-MM format (e.g., '2024-03')",
+            "pattern": "^\\d{4}-\\d{2}$"
+          },
+          "extended_hours": {
+            "type": "boolean",
+            "description": "Include pre-market and after-hours trading data",
+            "default": true
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Time series data with clean keys",
+        "properties": {
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "information": {
+                "type": "string",
+                "description": "Data description"
+              },
+              "symbol": { "type": "string", "description": "Stock symbol" },
+              "last_refreshed": {
+                "type": "string",
+                "description": "Last data refresh time (YYYY-MM-DD HH:MM:SS format)"
+              },
+              "output_size": {
+                "type": "string",
+                "description": "Output size (Compact/Full)"
+              },
+              "time_zone": { "type": "string", "description": "Time zone" },
+              "interval": { "type": "string", "description": "Data interval" }
+            }
+          },
+          "items": {
+            "type": "array",
+            "description": "Time series data sorted from earliest to latest date",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "description": "Date (YYYY-MM-DD format)"
+                },
+                "open": { "type": "string", "description": "Opening price" },
+                "high": { "type": "string", "description": "Highest price" },
+                "low": { "type": "string", "description": "Lowest price" },
+                "close": { "type": "string", "description": "Closing price" },
+                "adjusted_close": {
+                  "type": "string",
+                  "description": "Adjusted closing price (for adjusted data)"
+                },
+                "volume": { "type": "string", "description": "Trading volume" },
+                "dividend_amount": {
+                  "type": "string",
+                  "description": "Dividend amount (for adjusted data)"
+                },
+                "split_coefficient": {
+                  "type": "string",
+                  "description": "Split coefficient (for adjusted data)"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "lookup_stock_symbol",
+      "description": "Search for stock symbols and company names using keywords",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "keywords": {
+            "type": "string",
+            "description": "Search keywords for company name or symbol"
+          }
+        },
+        "required": ["keywords"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Search results for stocks with clean keys",
+        "properties": {
+          "keywords": {
+            "type": "string",
+            "description": "The search keywords used"
+          },
+          "total_matches": {
+            "type": "integer",
+            "description": "Total number of matches found"
+          },
+          "matches": {
+            "type": "array",
+            "description": "Array of matching stocks",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string",
+                  "description": "Stock ticker symbol"
+                },
+                "name": { "type": "string", "description": "Company name" },
+                "type": {
+                  "type": "string",
+                  "description": "Security type (e.g., Equity)"
+                },
+                "region": {
+                  "type": "string",
+                  "description": "Geographic region"
+                },
+                "market_open": {
+                  "type": "string",
+                  "description": "Market opening time"
+                },
+                "market_close": {
+                  "type": "string",
+                  "description": "Market closing time"
+                },
+                "timezone": {
+                  "type": "string",
+                  "description": "Market timezone"
+                },
+                "currency": {
+                  "type": "string",
+                  "description": "Trading currency"
+                },
+                "match_score": {
+                  "type": "string",
+                  "description": "Search relevance score"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_global_markets_status",
+      "description": "Get current status for all major global stock exchanges and cryptocurrency markets",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Status information for multiple global markets and exchanges",
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "description": "API endpoint used"
+          },
+          "markets": {
+            "type": "array",
+            "description": "Array of market status information",
+            "items": {
+              "type": "object",
+              "properties": {
+                "market_type": {
+                  "type": "string",
+                  "description": "Type of market (e.g., 'Equity', 'Crypto')"
+                },
+                "region": {
+                  "type": "string",
+                  "description": "Market region (e.g., 'United States', 'Europe')"
+                },
+                "primary_exchanges": {
+                  "type": "string",
+                  "description": "Primary exchanges in the region"
+                },
+                "local_open": {
+                  "type": "string",
+                  "description": "Local market opening time"
+                },
+                "local_close": {
+                  "type": "string",
+                  "description": "Local market closing time"
+                },
+                "current_status": {
+                  "type": "string",
+                  "description": "Current market status (e.g., 'Open', 'Closed')"
+                },
+                "notes": {
+                  "type": "string",
+                  "description": "Additional notes about market status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_historical_options",
+      "description": "Retrieve historical options trading data including calls and puts for a specific stock symbol and expiration date",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "The stock symbol to fetch historical options data for"
+          },
+          "date": {
+            "type": "string",
+            "description": "Date for historical options data (YYYY-MM-DD format)"
+          }
+        },
+        "required": ["symbol", "date"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Historical options data for the specified symbol and date",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Stock symbol"
+          },
+          "date": {
+            "type": "string",
+            "description": "Date of the options data (YYYY-MM-DD format)"
+          },
+          "data": {
+            "type": "array",
+            "description": "Array of historical options contracts",
+            "items": {
+              "type": "object",
+              "properties": {
+                "contractID": {
+                  "type": "string",
+                  "description": "Unique contract identifier"
+                },
+                "symbol": {
+                  "type": "string",
+                  "description": "Underlying stock symbol"
+                },
+                "expiration": {
+                  "type": "string",
+                  "description": "Contract expiration date (YYYY-MM-DD format)"
+                },
+                "strike": {
+                  "type": "string",
+                  "description": "Strike price"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Option type (call or put)"
+                },
+                "last": {
+                  "type": "string",
+                  "description": "Last trade price"
+                },
+                "mark": {
+                  "type": "string",
+                  "description": "Mark price (midpoint of bid/ask)"
+                },
+                "bid": {
+                  "type": "string",
+                  "description": "Bid price"
+                },
+                "bid_size": {
+                  "type": "string",
+                  "description": "Bid size"
+                },
+                "ask": {
+                  "type": "string",
+                  "description": "Ask price"
+                },
+                "ask_size": {
+                  "type": "string",
+                  "description": "Ask size"
+                },
+                "volume": {
+                  "type": "string",
+                  "description": "Trading volume"
+                },
+                "open_interest": {
+                  "type": "string",
+                  "description": "Open interest"
+                },
+                "date": {
+                  "type": "string",
+                  "description": "Data date (YYYY-MM-DD format)"
+                },
+                "implied_volatility": {
+                  "type": "string",
+                  "description": "Implied volatility"
+                },
+                "delta": {
+                  "type": "string",
+                  "description": "Delta (price sensitivity to underlying)"
+                },
+                "gamma": {
+                  "type": "string",
+                  "description": "Gamma (delta sensitivity)"
+                },
+                "theta": {
+                  "type": "string",
+                  "description": "Theta (time decay)"
+                },
+                "vega": {
+                  "type": "string",
+                  "description": "Vega (volatility sensitivity)"
+                },
+                "rho": {
+                  "type": "string",
+                  "description": "Rho (interest rate sensitivity)"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_top_gainers_losers",
+      "description": "Get top gaining stocks, top losing stocks, and most actively traded stocks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Top gainers, losers, and most actively traded stocks",
+        "properties": {
+          "metadata": {
+            "type": "object",
+            "description": "Information about the data",
+            "properties": {
+              "information": {
+                "type": "string",
+                "description": "Description of the data"
+              },
+              "last_updated": {
+                "type": "string",
+                "description": "Last update timestamp (YYYY-MM-DD HH:MM:SS format)"
+              }
+            }
+          },
+          "top_gainers": {
+            "type": "array",
+            "description": "Top gaining stocks",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ticker": {
+                  "type": "string",
+                  "description": "Stock ticker"
+                },
+                "price": {
+                  "type": "string",
+                  "description": "Current price"
+                },
+                "change_amount": {
+                  "type": "string",
+                  "description": "Price change amount"
+                },
+                "change_percentage": {
+                  "type": "string",
+                  "description": "Price change percentage"
+                },
+                "volume": {
+                  "type": "string",
+                  "description": "Trading volume"
+                }
+              }
+            }
+          },
+          "top_losers": {
+            "type": "array",
+            "description": "Top losing stocks",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ticker": {
+                  "type": "string",
+                  "description": "Stock ticker"
+                },
+                "price": {
+                  "type": "string",
+                  "description": "Current price"
+                },
+                "change_amount": {
+                  "type": "string",
+                  "description": "Price change amount"
+                },
+                "change_percentage": {
+                  "type": "string",
+                  "description": "Price change percentage"
+                },
+                "volume": {
+                  "type": "string",
+                  "description": "Trading volume"
+                }
+              }
+            }
+          },
+          "most_actively_traded": {
+            "type": "array",
+            "description": "Most actively traded stocks",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ticker": {
+                  "type": "string",
+                  "description": "Stock ticker"
+                },
+                "price": {
+                  "type": "string",
+                  "description": "Current price"
+                },
+                "change_amount": {
+                  "type": "string",
+                  "description": "Price change amount"
+                },
+                "change_percentage": {
+                  "type": "string",
+                  "description": "Price change percentage"
+                },
+                "volume": {
+                  "type": "string",
+                  "description": "Trading volume"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_news_sentiment",
+      "description": "Get news sentiment analysis for specific stock tickers. Always returns exactly 10 articles",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tickers": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of stock tickers for news sentiment analysis",
+            "maxItems": 10,
+            "minItems": 1
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "blockchain",
+                "earnings",
+                "ipo",
+                "mergers_and_acquisitions",
+                "financial_markets",
+                "economy_fiscal",
+                "economy_monetary",
+                "economy_macro",
+                "energy_transportation",
+                "finance",
+                "life_sciences",
+                "manufacturing",
+                "real_estate",
+                "retail_wholesale",
+                "technology"
+              ]
+            },
+            "description": "News topics to filter by"
+          },
+          "start_time": {
+            "type": "string",
+            "description": "Start time for news analysis (YYYYMMDDTHHMM format)",
+            "pattern": "^\\d{8}T\\d{4}$"
+          },
+          "end_time": {
+            "type": "string",
+            "description": "End time for news analysis (YYYYMMDDTHHMM format)",
+            "pattern": "^\\d{8}T\\d{4}$"
+          },
+          "sort": {
+            "type": "string",
+            "description": "Sort order for news articles",
+            "enum": ["LATEST", "EARLIEST", "RELEVANCE"],
+            "default": "LATEST"
+          }
+        },
+        "required": ["tickers"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "News sentiment analysis data for specified tickers",
+        "properties": {
+          "items": {
+            "type": "string",
+            "description": "Number of news items returned (always 10)"
+          },
+          "sentiment_score_definition": {
+            "type": "string",
+            "description": "Definition of sentiment scoring methodology"
+          },
+          "relevance_score_definition": {
+            "type": "string",
+            "description": "Definition of relevance scoring methodology"
+          },
+          "feed": {
+            "type": "array",
+            "description": "Array of news articles with sentiment analysis (exactly 10 articles)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "Article title"
+                },
+                "url": {
+                  "type": "string",
+                  "description": "Article URL"
+                },
+                "time_published": {
+                  "type": "string",
+                  "description": "Publication timestamp (YYYYMMDDTHHMMSS format)"
+                },
+                "authors": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "Article authors"
+                },
+                "summary": {
+                  "type": "string",
+                  "description": "Article summary"
+                },
+                "banner_image": {
+                  "type": "string",
+                  "description": "Banner image URL"
+                },
+                "source": {
+                  "type": "string",
+                  "description": "News source"
+                },
+                "category_within_source": {
+                  "type": "string",
+                  "description": "Category within source"
+                },
+                "source_domain": {
+                  "type": "string",
+                  "description": "Source domain"
+                },
+                "topics": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "topic": {
+                        "type": "string",
+                        "description": "Topic name"
+                      },
+                      "relevance_score": {
+                        "type": "string",
+                        "description": "Relevance score for this topic"
+                      }
+                    }
+                  },
+                  "description": "Topics and their relevance scores"
+                },
+                "overall_sentiment_score": {
+                  "type": "number",
+                  "description": "Overall sentiment score"
+                },
+                "overall_sentiment_label": {
+                  "type": "string",
+                  "description": "Overall sentiment label (Bearish/Neutral/Bullish)"
+                },
+                "ticker_sentiment": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "ticker": {
+                        "type": "string",
+                        "description": "Stock ticker"
+                      },
+                      "relevance_score": {
+                        "type": "string",
+                        "description": "Relevance score for this ticker"
+                      },
+                      "ticker_sentiment_score": {
+                        "type": "string",
+                        "description": "Sentiment score for this ticker"
+                      },
+                      "ticker_sentiment_label": {
+                        "type": "string",
+                        "description": "Sentiment label for this ticker"
+                      }
+                    }
+                  },
+                  "description": "Ticker-specific sentiment data"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_stock_insider_transactions",
+      "description": "Get insider trading transactions for a specific stock symbol",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "The stock symbol to fetch insider transactions for"
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Insider trading transactions data",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Stock symbol"
+          },
+          "transactions": {
+            "type": "array",
+            "description": "Array of insider trading transactions",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the insider"
+                },
+                "relationship": {
+                  "type": "string",
+                  "description": "Relationship to the company (e.g., CEO, Director, Officer)"
+                },
+                "date": {
+                  "type": "string",
+                  "description": "Transaction date (YYYY-MM-DD format)"
+                },
+                "transaction_type": {
+                  "type": "string",
+                  "description": "Type of transaction (e.g., Purchase, Sale)"
+                },
+                "ownership_type": {
+                  "type": "string",
+                  "description": "Type of ownership (e.g., Direct, Indirect)"
+                },
+                "shares_traded": {
+                  "type": "string",
+                  "description": "Number of shares traded"
+                },
+                "last_price": {
+                  "type": "string",
+                  "description": "Price per share of the transaction"
+                },
+                "shares_held": {
+                  "type": "string",
+                  "description": "Total shares held after transaction"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "analyze_stocks",
+      "description": "Perform advanced analytics on stock price data",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbols": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "description": "List of ticker symbols to analyze (e.g., [\"AAPL\",\"MSFT\"]).",
+            "minItems": 1
+          },
+          "interval": {
+            "type": "string",
+            "description": "Sampling interval between data points.",
+            "enum": [
+              "1min",
+              "5min",
+              "15min",
+              "30min",
+              "60min",
+              "DAILY",
+              "WEEKLY",
+              "MONTHLY"
+            ]
+          },
+          "series_range": {
+            "type": "string",
+            "description": "Date/time span of the series. Use 'full', relative like '30day'/'12month'/'2year' (and for intraday: '45minute'/'6hour'), or absolute dates: 'YYYY-MM-DD' (1 day), 'YYYY-MM' (full month), 'YYYY-MM-DDTHH:MM:SS'. For a custom start/end, pass this key twice.",
+            "default": "full"
+          },
+          "ohlc": {
+            "type": "string",
+            "description": "Which OHLC field to compute on.",
+            "enum": ["open", "high", "low", "close"],
+            "default": "close"
+          },
+          "calculations": {
+            "type": "array",
+            "description": "Analytics to compute. Use plain names or parameterized forms.",
+            "minItems": 1,
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "MIN",
+                    "MAX",
+                    "MEAN",
+                    "MEDIAN",
+                    "CUMULATIVE_RETURN",
+                    "VARIANCE",
+                    "STDDEV",
+                    "MAX_DRAWDOWN",
+                    "HISTOGRAM",
+                    "AUTOCORRELATION",
+                    "COVARIANCE",
+                    "CORRELATION"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "pattern": "^VARIANCE\\(annualized=(True|False)\\)$"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^STDDEV\\(annualized=(True|False)\\)$"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^COVARIANCE\\(annualized=(True|False)\\)$"
+                },
+                { "type": "string", "pattern": "^HISTOGRAM\\(bins=\\d+\\)$" },
+                {
+                  "type": "string",
+                  "pattern": "^AUTOCORRELATION\\(lag=\\d+\\)$"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^CORRELATION\\(method=(PEARSON|KENDALL|SPEARMAN)\\)$"
+                }
+              ]
+            }
+          },
+          "window_size": {
+            "type": ["integer", "null"],
+            "description": "Sliding window length (data points). Omit or set null for fixed-window over the entire range. If provided, must be >= 10.",
+            "minimum": 10,
+            "default": null
+          }
+        },
+        "required": ["symbols", "interval", "calculations", "series_range"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Analytics results. Fixed-window returns one set per symbol (plus matrices where applicable). Sliding-window returns series per symbol.",
+        "properties": {
+          "window_type": {
+            "type": "string",
+            "description": "Resolved window mode.",
+            "enum": ["fixed", "sliding"]
+          },
+          "symbols": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Symbols analyzed."
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string",
+                  "description": "Stock symbol"
+                },
+                "calculation": {
+                  "type": "string",
+                  "description": "Name of the calculation performed"
+                },
+                "value": {
+                  "type": ["number", "string"],
+                  "description": "Calculated value"
+                },
+                "date": {
+                  "type": "string",
+                  "description": "Date or timestamp for the calculation (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS format)"
+                }
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Echoed request context & resolution.",
+            "properties": {
+              "interval": { "type": "string" },
+              "series_range": { "type": "string" },
+              "ohlc": { "type": "string" },
+              "window_size": { "type": ["integer", "null"] },
+              "calculations": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        },
+        "required": ["window_type", "symbols", "results"]
+      }
+    },
+    {
+      "name": "get_symbol_overview",
+      "description": "Get comprehensive overview information for a stock symbol or ETF including key metrics, description, and fundamental data",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "The stock/ETF symbol to fetch profile for"
+          },
+          "profile_type": {
+            "type": "string",
+            "description": "Type of profile to fetch",
+            "enum": ["company", "etf"]
+          }
+        },
+        "required": ["symbol", "profile_type"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Company or ETF profile data",
+        "properties": {
+          "profile_type": {
+            "type": "string",
+            "description": "Type of profile returned",
+            "enum": ["overview", "etf"]
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Stock/ETF symbol"
+          },
+          "name": {
+            "type": "string",
+            "description": "Company/ETF name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Company/ETF description"
+          },
+          "cik": {
+            "type": "string",
+            "description": "Central Index Key (for companies)"
+          },
+          "exchange": {
+            "type": "string",
+            "description": "Primary exchange"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Trading currency"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country of origin"
+          },
+          "sector": {
+            "type": "string",
+            "description": "Business sector"
+          },
+          "industry": {
+            "type": "string",
+            "description": "Industry classification"
+          },
+          "address": {
+            "type": "string",
+            "description": "Company address"
+          },
+          "fiscal_year_end": {
+            "type": "string",
+            "description": "Fiscal year end month"
+          },
+          "latest_quarter": {
+            "type": "string",
+            "description": "Latest reported quarter (YYYY-MM-DD format)"
+          },
+          "market_capitalization": {
+            "type": "string",
+            "description": "Market capitalization"
+          },
+          "ebitda": {
+            "type": "string",
+            "description": "EBITDA"
+          },
+          "pe_ratio": {
+            "type": "string",
+            "description": "Price-to-earnings ratio"
+          },
+          "peg_ratio": {
+            "type": "string",
+            "description": "Price/earnings to growth ratio"
+          },
+          "book_value": {
+            "type": "string",
+            "description": "Book value per share"
+          },
+          "dividend_per_share": {
+            "type": "string",
+            "description": "Dividend per share"
+          },
+          "dividend_yield": {
+            "type": "string",
+            "description": "Dividend yield"
+          },
+          "eps": {
+            "type": "string",
+            "description": "Earnings per share"
+          },
+          "revenue_per_share_ttm": {
+            "type": "string",
+            "description": "Revenue per share (trailing twelve months)"
+          },
+          "profit_margin": {
+            "type": "string",
+            "description": "Profit margin"
+          },
+          "operating_margin_ttm": {
+            "type": "string",
+            "description": "Operating margin (trailing twelve months)"
+          },
+          "return_on_assets_ttm": {
+            "type": "string",
+            "description": "Return on assets (trailing twelve months)"
+          },
+          "return_on_equity_ttm": {
+            "type": "string",
+            "description": "Return on equity (trailing twelve months)"
+          },
+          "revenue_ttm": {
+            "type": "string",
+            "description": "Revenue (trailing twelve months)"
+          },
+          "gross_profit_ttm": {
+            "type": "string",
+            "description": "Gross profit (trailing twelve months)"
+          },
+          "diluted_eps_ttm": {
+            "type": "string",
+            "description": "Diluted earnings per share (trailing twelve months)"
+          },
+          "quarterly_earnings_growth_yoy": {
+            "type": "string",
+            "description": "Quarterly earnings growth year-over-year"
+          },
+          "quarterly_revenue_growth_yoy": {
+            "type": "string",
+            "description": "Quarterly revenue growth year-over-year"
+          },
+          "analyst_target_price": {
+            "type": "string",
+            "description": "Analyst target price"
+          },
+          "trailing_pe": {
+            "type": "string",
+            "description": "Trailing price-to-earnings ratio"
+          },
+          "forward_pe": {
+            "type": "string",
+            "description": "Forward price-to-earnings ratio"
+          },
+          "price_to_sales_ratio_ttm": {
+            "type": "string",
+            "description": "Price-to-sales ratio (trailing twelve months)"
+          },
+          "price_to_book_ratio": {
+            "type": "string",
+            "description": "Price-to-book ratio"
+          },
+          "ev_to_revenue": {
+            "type": "string",
+            "description": "Enterprise value to revenue ratio"
+          },
+          "ev_to_ebitda": {
+            "type": "string",
+            "description": "Enterprise value to EBITDA ratio"
+          },
+          "beta": {
+            "type": "string",
+            "description": "Beta (volatility measure)"
+          },
+          "52_week_high": {
+            "type": "string",
+            "description": "52-week high price"
+          },
+          "52_week_low": {
+            "type": "string",
+            "description": "52-week low price"
+          },
+          "50_day_moving_average": {
+            "type": "string",
+            "description": "50-day moving average"
+          },
+          "200_day_moving_average": {
+            "type": "string",
+            "description": "200-day moving average"
+          },
+          "shares_outstanding": {
+            "type": "string",
+            "description": "Shares outstanding"
+          },
+          "dividend_date": {
+            "type": "string",
+            "description": "Next dividend date (YYYY-MM-DD format)"
+          },
+          "ex_dividend_date": {
+            "type": "string",
+            "description": "Ex-dividend date (YYYY-MM-DD format)"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_financial_statements",
+      "description": "Get financial statements for a company including income statement, balance sheet, and cash flow data with key financial metrics and ratios",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "The stock symbol to fetch financial statements for"
+          },
+          "statement_type": {
+            "type": "string",
+            "description": "Type of financial statement to fetch",
+            "enum": ["income", "balance", "cash_flow", "all"],
+            "default": "all"
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Financial statement data for the requested type(s)",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Stock symbol"
+          },
+          "statement_type": {
+            "type": "string",
+            "description": "Type of statement(s) returned"
+          },
+          "income_statement": {
+            "type": "object",
+            "description": "Income statement data (if requested)",
+            "properties": {
+              "fiscal_date_ending": {
+                "type": "string",
+                "description": "Fiscal date ending (YYYY-MM-DD format)"
+              },
+              "reported_currency": { "type": "string" },
+              "total_revenue": { "type": "string" },
+              "cost_of_revenue": { "type": "string" },
+              "gross_profit": { "type": "string" },
+              "operating_income": { "type": "string" },
+              "net_income": { "type": "string" },
+              "earnings_per_share": { "type": "string" },
+              "operating_expenses": { "type": "string" },
+              "income_before_tax": { "type": "string" },
+              "income_tax_expense": { "type": "string" }
+            }
+          },
+          "balance_sheet": {
+            "type": "object",
+            "description": "Balance sheet data (if requested)",
+            "properties": {
+              "fiscal_date_ending": {
+                "type": "string",
+                "description": "Fiscal date ending (YYYY-MM-DD format)"
+              },
+              "reported_currency": { "type": "string" },
+              "total_assets": { "type": "string" },
+              "total_current_assets": { "type": "string" },
+              "total_non_current_assets": { "type": "string" },
+              "total_liabilities": { "type": "string" },
+              "total_current_liabilities": { "type": "string" },
+              "total_non_current_liabilities": { "type": "string" },
+              "total_shareholder_equity": { "type": "string" },
+              "retained_earnings": { "type": "string" },
+              "common_stock": { "type": "string" }
+            }
+          },
+          "cash_flow": {
+            "type": "object",
+            "description": "Cash flow statement data (if requested)",
+            "properties": {
+              "fiscal_date_ending": {
+                "type": "string",
+                "description": "Fiscal date ending (YYYY-MM-DD format)"
+              },
+              "reported_currency": { "type": "string" },
+              "operating_cashflow": { "type": "string" },
+              "cashflow_from_investment": { "type": "string" },
+              "cashflow_from_financing": { "type": "string" },
+              "net_income": { "type": "string" },
+              "capital_expenditures": { "type": "string" },
+              "change_in_cash_and_cash_equivalents": { "type": "string" },
+              "depreciation_depletion_and_amortization": { "type": "string" },
+              "dividend_payout": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_earning_data",
+      "description": "Get comprehensive earnings data for a stock symbol including both annual and quarterly earnings history with EPS, estimates, and surprises",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "The stock symbol to fetch earnings data for"
+          },
+          "quarter": {
+            "type": "string",
+            "description": "Optional specific quarter to focus on (e.g., '2024-Q1', '2023-Q4'). If not provided, returns all available earnings data.",
+            "pattern": "^\\d{4}-Q[1-4]$"
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Company earnings data including annual and quarterly earnings history",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Stock symbol"
+          },
+          "annual_earnings": {
+            "type": "array",
+            "description": "Annual earnings data",
+            "items": {
+              "type": "object",
+              "properties": {
+                "fiscal_date_ending": {
+                  "type": "string",
+                  "description": "Fiscal year end date (YYYY-MM-DD format)"
+                },
+                "reported_eps": {
+                  "type": "string",
+                  "description": "Reported earnings per share"
+                }
+              }
+            }
+          },
+          "quarterly_earnings": {
+            "type": "array",
+            "description": "Quarterly earnings data",
+            "items": {
+              "type": "object",
+              "properties": {
+                "quarter": {
+                  "type": "string",
+                  "description": "Quarter in our format (e.g., '2024-Q1', '2023-Q4')"
+                },
+                "fiscal_date_ending": {
+                  "type": "string",
+                  "description": "Fiscal quarter end date (YYYY-MM-DD format)"
+                },
+                "reported_date": {
+                  "type": "string",
+                  "description": "Date when earnings were reported (YYYY-MM-DD format)"
+                },
+                "reported_eps": {
+                  "type": "string",
+                  "description": "Reported earnings per share"
+                },
+                "estimated_eps": {
+                  "type": "string",
+                  "description": "Estimated earnings per share"
+                },
+                "surprise": {
+                  "type": "string",
+                  "description": "Earnings surprise"
+                },
+                "surprise_percentage": {
+                  "type": "string",
+                  "description": "Earnings surprise percentage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_corporate_actions",
+      "description": "Retrieve comprehensive corporate actions history including dividend payments and stock splits for a given stock symbol",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "The stock symbol to fetch corporate actions for"
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Complete corporate actions data including both dividends and stock splits",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Stock symbol"
+          },
+          "dividends": {
+            "type": "array",
+            "description": "Complete dividend payment history",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ex_dividend_date": {
+                  "type": "string",
+                  "description": "Ex-dividend date (YYYY-MM-DD format)"
+                },
+                "dividend_amount": {
+                  "type": "string",
+                  "description": "Dividend amount per share"
+                },
+                "record_date": {
+                  "type": "string",
+                  "description": "Record date (YYYY-MM-DD format)"
+                },
+                "payment_date": {
+                  "type": "string",
+                  "description": "Payment date (YYYY-MM-DD format)"
+                },
+                "declaration_date": {
+                  "type": "string",
+                  "description": "Declaration date (YYYY-MM-DD format)"
+                }
+              }
+            }
+          },
+          "splits": {
+            "type": "array",
+            "description": "Complete stock split history",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "description": "Split date (YYYY-MM-DD format)"
+                },
+                "split_coefficient": {
+                  "type": "string",
+                  "description": "Split ratio (e.g., '2:1', '3:2')"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_market_calendar",
+      "description": "Retrieve upcoming earnings announcements with optional IPO calendar data for market planning and analysis",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Stock symbol for earnings calendar (optional, if not provided returns all upcoming earnings)"
+          },
+          "horizon": {
+            "type": "string",
+            "description": "Time horizon for earnings calendar",
+            "enum": ["3month", "6month", "12month"],
+            "default": "3month"
+          },
+          "with_ipos": {
+            "type": "boolean",
+            "description": "Include IPO calendar data in addition to earnings calendar",
+            "default": false
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Structured market calendar data",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Symbol for earnings calendar (only present if provided in input)"
+          },
+          "horizon": {
+            "type": "string",
+            "description": "Time horizon for earnings calendar"
+          },
+          "with_ipos": {
+            "type": "boolean",
+            "description": "Whether IPO data is included"
+          },
+          "earnings": {
+            "type": "array",
+            "description": "Upcoming earnings announcements",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string",
+                  "description": "Stock symbol"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Company name"
+                },
+                "report_date": {
+                  "type": "string",
+                  "description": "Earnings report date (YYYY-MM-DD format)"
+                },
+                "fiscal_date_ending": {
+                  "type": "string",
+                  "description": "Fiscal quarter ending date (YYYY-MM-DD format)"
+                },
+                "estimate": {
+                  "type": "string",
+                  "description": "Earnings per share estimate"
+                },
+                "currency": {
+                  "type": "string",
+                  "description": "Currency code"
+                }
+              }
+            }
+          },
+          "ipos": {
+            "type": "array",
+            "description": "Upcoming IPO announcements (only included if with_ipos is true)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string",
+                  "description": "Stock symbol"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Company name"
+                },
+                "ipo_date": {
+                  "type": "string",
+                  "description": "IPO date (YYYY-MM-DD format)"
+                },
+                "price_range_low": {
+                  "type": "string",
+                  "description": "IPO price range low"
+                },
+                "price_range_high": {
+                  "type": "string",
+                  "description": "IPO price range high"
+                },
+                "currency": {
+                  "type": "string",
+                  "description": "Currency code"
+                },
+                "exchange": {
+                  "type": "string",
+                  "description": "Stock exchange"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_listing_status",
+      "description": "Retrieve current listing status information for stocks on US exchanges including active and delisted securities",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date for listing status (YYYY-MM-DD format, optional)"
+          },
+          "state": {
+            "type": "string",
+            "description": "Listing status state to filter by",
+            "enum": ["active", "delisted"],
+            "default": "active"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Structured listing status data for US exchange stocks",
+        "properties": {
+          "state": {
+            "type": "string",
+            "description": "Listing status state queried",
+            "enum": ["active", "delisted"]
+          },
+          "date": {
+            "type": "string",
+            "description": "Date for the listing status query (if provided)"
+          },
+          "listings": {
+            "type": "array",
+            "description": "Stock listing information",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string",
+                  "description": "Stock symbol"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Company name"
+                },
+                "exchange": {
+                  "type": "string",
+                  "description": "Stock exchange"
+                },
+                "asset_type": {
+                  "type": "string",
+                  "description": "Type of asset (Stock, ETF, etc.)"
+                },
+                "ipo_date": {
+                  "type": "string",
+                  "description": "IPO date (YYYY-MM-DD format or 'null')"
+                },
+                "delisting_date": {
+                  "type": "string",
+                  "description": "Delisting date (YYYY-MM-DD format or 'null')"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Current listing status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_current_fx_rate",
+      "description": "Retrieve the current real-time exchange rate between two currencies with bid/ask pricing information",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from_currency": {
+            "type": "string",
+            "description": "Source currency code (e.g., 'USD', 'EUR', 'GBP')"
+          },
+          "to_currency": {
+            "type": "string",
+            "description": "Target currency code (e.g., 'USD', 'EUR', 'GBP')"
+          }
+        },
+        "required": ["from_currency", "to_currency"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Real-time currency exchange rate data",
+        "properties": {
+          "from_currency_code": {
+            "type": "string",
+            "description": "Source currency code"
+          },
+          "from_currency_name": {
+            "type": "string",
+            "description": "Source currency name"
+          },
+          "to_currency_code": {
+            "type": "string",
+            "description": "Target currency code"
+          },
+          "to_currency_name": {
+            "type": "string",
+            "description": "Target currency name"
+          },
+          "exchange_rate": {
+            "type": "string",
+            "description": "Current exchange rate"
+          },
+          "last_refreshed": {
+            "type": "string",
+            "description": "Last refresh timestamp (YYYY-MM-DD HH:MM:SS format)"
+          },
+          "time_zone": {
+            "type": "string",
+            "description": "Time zone for the data"
+          },
+          "bid_price": {
+            "type": "string"
+          },
+          "ask_price": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_fx_time_series",
+      "description": "Retrieve historical foreign exchange time series data with multiple interval options including intraday, daily, weekly, and monthly periods",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from_symbol": {
+            "type": "string",
+            "description": "Source currency code (e.g., 'EUR', 'GBP')"
+          },
+          "to_symbol": {
+            "type": "string",
+            "description": "Target currency code (e.g., 'USD', 'JPY')"
+          },
+          "interval": {
+            "type": "string",
+            "description": "Time interval for the data",
+            "enum": [
+              "1min",
+              "5min",
+              "15min",
+              "30min",
+              "60min",
+              "daily",
+              "weekly",
+              "monthly"
+            ],
+            "default": "daily"
+          },
+          "outputsize": {
+            "type": "string",
+            "description": "Amount of data returned",
+            "enum": ["compact", "full"],
+            "default": "compact"
+          }
+        },
+        "required": ["from_symbol", "to_symbol"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "FX time series data for the specified interval",
+        "properties": {
+          "metadata": {
+            "type": "object",
+            "description": "Metadata about the FX data",
+            "properties": {
+              "information": {
+                "type": "string",
+                "description": "Data description"
+              },
+              "from_symbol": {
+                "type": "string",
+                "description": "Source currency"
+              },
+              "to_symbol": {
+                "type": "string",
+                "description": "Target currency"
+              },
+              "output_size": {
+                "type": "string",
+                "description": "Output size (Compact/Full)"
+              },
+              "last_refreshed": {
+                "type": "string",
+                "description": "Last data refresh time (YYYY-MM-DD HH:MM:SS format)"
+              },
+              "time_zone": {
+                "type": "string",
+                "description": "Time zone"
+              },
+              "interval": {
+                "type": "string",
+                "description": "Data interval"
+              }
+            }
+          },
+          "items": {
+            "type": "array",
+            "description": "Time series FX data sorted from earliest to latest date",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "description": "Date or timestamp"
+                },
+                "open": {
+                  "type": "string",
+                  "description": "Opening exchange rate"
+                },
+                "high": {
+                  "type": "string",
+                  "description": "Highest exchange rate"
+                },
+                "low": {
+                  "type": "string",
+                  "description": "Lowest exchange rate"
+                },
+                "close": {
+                  "type": "string",
+                  "description": "Closing exchange rate"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_current_crypto_quote",
+      "description": "Retrieve the current market quote for a cryptocurrency including latest price, volume, and market data",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Cryptocurrency symbol (e.g., 'BTC', 'ETH')"
+          },
+          "market": {
+            "type": "string",
+            "description": "Market currency (e.g., 'USD', 'EUR')"
+          }
+        },
+        "required": ["symbol", "market"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Current cryptocurrency market quote with normalized data",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Cryptocurrency symbol"
+          },
+          "name": {
+            "type": "string",
+            "description": "Cryptocurrency name"
+          },
+          "market": {
+            "type": "string",
+            "description": "Market currency code"
+          },
+          "market_name": {
+            "type": "string",
+            "description": "Market currency name"
+          },
+          "last_refreshed": {
+            "type": "string",
+            "description": "Last data refresh timestamp (YYYY-MM-DD HH:MM:SS format)"
+          },
+          "time_zone": {
+            "type": "string",
+            "description": "Time zone for the data"
+          },
+          "current_quote": {
+            "type": "object",
+            "description": "Latest trading day data",
+            "properties": {
+              "date": {
+                "type": "string",
+                "description": "Quote date (YYYY-MM-DD format)"
+              },
+              "open": {
+                "type": "string",
+                "description": "Opening price"
+              },
+              "high": {
+                "type": "string",
+                "description": "Highest price"
+              },
+              "low": {
+                "type": "string",
+                "description": "Lowest price"
+              },
+              "close": {
+                "type": "string",
+                "description": "Closing price (current price)"
+              },
+              "volume": {
+                "type": "string",
+                "description": "Trading volume"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_crypto_time_series",
+      "description": "Retrieve historical cryptocurrency price data and trading volumes over various time periods including minute-by-minute, daily, weekly, and monthly intervals",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Cryptocurrency symbol (e.g., 'BTC', 'ETH')"
+          },
+          "market": {
+            "type": "string",
+            "description": "Market currency (e.g., 'USD', 'EUR')"
+          },
+          "interval": {
+            "type": "string",
+            "description": "Time interval for the data",
+            "enum": [
+              "1min",
+              "5min",
+              "15min",
+              "30min",
+              "60min",
+              "daily",
+              "weekly",
+              "monthly"
+            ],
+            "default": "daily"
+          },
+          "outputsize": {
+            "type": "string",
+            "description": "Amount of data returned (for intraday)",
+            "enum": ["compact", "full"],
+            "default": "compact"
+          }
+        },
+        "required": ["symbol", "market"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Historical cryptocurrency time series data with structured OHLCV pricing",
+        "properties": {
+          "metadata": {
+            "type": "object",
+            "description": "Metadata about the cryptocurrency time series",
+            "properties": {
+              "information": {
+                "type": "string",
+                "description": "Data description"
+              },
+              "symbol": {
+                "type": "string",
+                "description": "Cryptocurrency symbol"
+              },
+              "name": {
+                "type": "string",
+                "description": "Cryptocurrency name"
+              },
+              "market": {
+                "type": "string",
+                "description": "Market currency code"
+              },
+              "market_name": {
+                "type": "string",
+                "description": "Market currency name"
+              },
+              "last_refreshed": {
+                "type": "string",
+                "description": "Last data refresh timestamp"
+              },
+              "interval": {
+                "type": "string",
+                "description": "Data interval (for intraday data)"
+              },
+              "output_size": {
+                "type": "string",
+                "description": "Output size (for intraday data)"
+              },
+              "time_zone": {
+                "type": "string",
+                "description": "Time zone for the data"
+              }
+            }
+          },
+          "items": {
+            "type": "array",
+            "description": "Time series cryptocurrency data sorted from earliest to latest date",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "description": "Date or timestamp"
+                },
+                "open": {
+                  "type": "string",
+                  "description": "Opening price"
+                },
+                "high": {
+                  "type": "string",
+                  "description": "Highest price"
+                },
+                "low": {
+                  "type": "string",
+                  "description": "Lowest price"
+                },
+                "close": {
+                  "type": "string",
+                  "description": "Closing price"
+                },
+                "volume": {
+                  "type": "string",
+                  "description": "Trading volume"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_commodities",
+      "description": "Get global commodities data including oil, metals, and agricultural products",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "interval": {
+            "type": "string",
+            "description": "Data frequency",
+            "enum": ["monthly", "quarterly", "annual"],
+            "default": "monthly"
+          },
+          "commodity": {
+            "type": "string",
+            "description": "Type of commodity to get",
+            "enum": [
+              "all",
+              "oil",
+              "metals",
+              "agricultural",
+              "energy",
+              "precious_metals",
+              "industrial_metals"
+            ],
+            "default": "all"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Global commodities data",
+        "properties": {
+          "interval": {
+            "type": "string",
+            "description": "Data frequency used"
+          },
+          "commodity": {
+            "type": "string",
+            "description": "Type of commodity requested"
+          },
+          "data": {
+            "type": "array",
+            "description": "Array of commodity data",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the commodity"
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Unit of measurement"
+                },
+                "interval": {
+                  "type": "string",
+                  "description": "Data interval"
+                },
+                "date": {
+                  "type": "string",
+                  "description": "Date of the data point"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Commodity price value"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_growth_metrics",
+      "description": "Real GDP and real GDP per capita",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "frequency": {
+            "type": "string",
+            "description": "Data frequency",
+            "enum": ["monthly", "quarterly", "annual"],
+            "default": "quarterly"
+          },
+          "seasonally_adjusted": {
+            "type": "boolean",
+            "description": "Whether to use seasonally adjusted data",
+            "default": true
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Growth metrics data including GDP and GDP per capita",
+        "properties": {
+          "frequency": {
+            "type": "string",
+            "description": "Data frequency used"
+          },
+          "seasonally_adjusted": {
+            "type": "boolean",
+            "description": "Whether data is seasonally adjusted"
+          },
+          "data": {
+            "type": "array",
+            "description": "Array of growth metrics data",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "description": "Date of the data point"
+                },
+                "real_gdp": {
+                  "type": "string",
+                  "description": "Real GDP value"
+                },
+                "real_gdp_per_capita": {
+                  "type": "string",
+                  "description": "Real GDP per capita value"
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Unit of measurement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_rates_yields",
+      "description": "Treasury yields curve and federal funds rate, with optional target range",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "maturities": {
+            "type": "array",
+            "description": "Treasury yield maturities to include",
+            "items": {
+              "type": "string",
+              "enum": ["3month", "2year", "5year", "7year", "10year", "30year"]
+            },
+            "default": ["10year"]
+          },
+          "yield_basis": {
+            "type": "string",
+            "description": "Yield calculation basis",
+            "enum": ["actual", "nominal"],
+            "default": "actual"
+          },
+          "include_target_range": {
+            "type": "boolean",
+            "description": "Include federal funds rate target range",
+            "default": true
+          },
+          "frequency": {
+            "type": "string",
+            "description": "Data frequency",
+            "enum": ["daily", "weekly", "monthly"],
+            "default": "monthly"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Interest rates and treasury yields data",
+        "properties": {
+          "frequency": {
+            "type": "string",
+            "description": "Data frequency used"
+          },
+          "yield_basis": {
+            "type": "string",
+            "description": "Yield calculation basis"
+          },
+          "data": {
+            "type": "array",
+            "description": "Array of rates and yields data",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "description": "Date of the data point"
+                },
+                "federal_funds_rate": {
+                  "type": "string",
+                  "description": "Federal funds rate value"
+                },
+                "treasury_yields": {
+                  "type": "object",
+                  "description": "Treasury yields by maturity",
+                  "properties": {
+                    "3month": { "type": "string" },
+                    "2year": { "type": "string" },
+                    "5year": { "type": "string" },
+                    "7year": { "type": "string" },
+                    "10year": { "type": "string" },
+                    "30year": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_prices_inflation",
+      "description": "CPI index and inflation rate, with optional core variants",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "include_core": {
+            "type": "boolean",
+            "description": "Include core CPI (excluding food and energy)",
+            "default": false
+          },
+          "annualized": {
+            "type": "boolean",
+            "description": "Calculate annualized inflation rate",
+            "default": false
+          },
+          "frequency": {
+            "type": "string",
+            "description": "Data frequency",
+            "enum": ["monthly", "quarterly", "annual"],
+            "default": "monthly"
+          },
+          "seasonally_adjusted": {
+            "type": "boolean",
+            "description": "Whether to use seasonally adjusted data",
+            "default": true
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Consumer price index and inflation data",
+        "properties": {
+          "frequency": {
+            "type": "string",
+            "description": "Data frequency used"
+          },
+          "seasonally_adjusted": {
+            "type": "boolean",
+            "description": "Whether data is seasonally adjusted"
+          },
+          "include_core": {
+            "type": "boolean",
+            "description": "Whether core CPI is included"
+          },
+          "annualized": {
+            "type": "boolean",
+            "description": "Whether inflation rate is annualized"
+          },
+          "data": {
+            "type": "array",
+            "description": "Array of price and inflation data",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "description": "Date of the data point"
+                },
+                "cpi": {
+                  "type": "string",
+                  "description": "Consumer Price Index value"
+                },
+                "inflation_rate": {
+                  "type": "string",
+                  "description": "Inflation rate percentage"
+                },
+                "core_cpi": {
+                  "type": "string",
+                  "description": "Core CPI value (if included)"
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Unit of measurement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_labor_activity",
+      "description": "Unemployment and nonfarm payrolls, with optional retail sales and durables",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "include_demand": {
+            "type": "boolean",
+            "description": "Include retail sales and durables data",
+            "default": false
+          },
+          "frequency": {
+            "type": "string",
+            "description": "Data frequency",
+            "enum": ["monthly", "quarterly"],
+            "default": "monthly"
+          },
+          "seasonally_adjusted": {
+            "type": "boolean",
+            "description": "Whether to use seasonally adjusted data",
+            "default": true
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Labor market and economic activity data",
+        "properties": {
+          "frequency": {
+            "type": "string",
+            "description": "Data frequency used"
+          },
+          "seasonally_adjusted": {
+            "type": "boolean",
+            "description": "Whether data is seasonally adjusted"
+          },
+          "include_demand": {
+            "type": "boolean",
+            "description": "Whether demand indicators are included"
+          },
+          "data": {
+            "type": "array",
+            "description": "Array of labor and activity data",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "description": "Date of the data point"
+                },
+                "unemployment_rate": {
+                  "type": "string",
+                  "description": "Unemployment rate percentage"
+                },
+                "nonfarm_payrolls": {
+                  "type": "string",
+                  "description": "Nonfarm payrolls value"
+                },
+                "retail_sales": {
+                  "type": "string",
+                  "description": "Retail sales value (if included)"
+                },
+                "durables": {
+                  "type": "string",
+                  "description": "Durable goods orders value (if included)"
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Unit of measurement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_trend_indicators",
+      "description": "Trend pack: SMA, EMA, WMA, MACD. Uses a global preset to set sensible defaults",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "The stock symbol to analyze"
+          },
+          "interval": {
+            "type": "string",
+            "description": "Time interval for the data",
+            "enum": [
+              "1min",
+              "5min",
+              "15min",
+              "30min",
+              "60min",
+              "daily",
+              "weekly",
+              "monthly"
+            ]
+          },
+          "preset": {
+            "type": "string",
+            "description": "Preset configuration for trend indicators",
+            "enum": ["fast", "standard", "slow"],
+            "default": "standard"
+          }
+        },
+        "required": ["symbol", "interval"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Trend indicators data with all indicators in the pack",
+        "properties": {
+          "metadata": {
+            "type": "object",
+            "description": "Metadata about the indicators calculation",
+            "properties": {
+              "symbol": {
+                "type": "string",
+                "description": "Stock symbol analyzed"
+              },
+              "interval": {
+                "type": "string",
+                "description": "Time interval used"
+              },
+              "preset": {
+                "type": "string",
+                "description": "Preset configuration used"
+              }
+            }
+          },
+          "items": {
+            "type": "array",
+            "description": "Technical indicator values over time",
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": {
+                  "type": "string",
+                  "description": "Date/time of the data point (format: YYYY-MM-DD HH:MM:SS)"
+                },
+                "indicator": {
+                  "type": "string",
+                  "description": "Indicator type: sma|ema|wma|macd"
+                },
+                "component": {
+                  "type": "string",
+                  "description": "Value component: value|macd|macd_signal|macd_hist"
+                },
+                "value": {
+                  "type": ["number", "string"],
+                  "description": "Indicator value"
+                }
+              },
+              "required": ["timestamp", "indicator", "component", "value"]
+            }
+          }
+        },
+        "required": ["items"]
+      }
+    },
+    {
+      "name": "get_momentum_indicators",
+      "description": "Momentum pack: RSI, STOCH, CCI, MFI. Global preset sets all defaults",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "The stock symbol to analyze"
+          },
+          "interval": {
+            "type": "string",
+            "description": "Time interval for the data",
+            "enum": [
+              "1min",
+              "5min",
+              "15min",
+              "30min",
+              "60min",
+              "daily",
+              "weekly",
+              "monthly"
+            ]
+          },
+          "preset": {
+            "type": "string",
+            "description": "Preset configuration for momentum indicators",
+            "enum": ["fast", "standard", "slow"],
+            "default": "standard"
+          }
+        },
+        "required": ["symbol", "interval"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Momentum indicators data with all indicators in the pack",
+        "properties": {
+          "metadata": {
+            "type": "object",
+            "description": "Metadata about the indicators calculation"
+          },
+          "items": {
+            "type": "array",
+            "description": "Technical indicator values over time",
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": {
+                  "type": "string",
+                  "description": "Date/time of the data point (format: YYYY-MM-DD HH:MM:SS)"
+                },
+                "indicator": {
+                  "type": "string",
+                  "description": "Indicator type: rsi|stoch|cci|mfi"
+                },
+                "component": {
+                  "type": "string",
+                  "description": "Value component: value|fastk|fastd|slowk|slowd"
+                },
+                "value": {
+                  "type": ["number", "string"],
+                  "description": "Indicator value"
+                }
+              },
+              "required": ["timestamp", "indicator", "component", "value"]
+            }
+          }
+        },
+        "required": ["items"]
+      }
+    },
+    {
+      "name": "get_volatility_indicators",
+      "description": "Volatility pack: BBANDS, ATR, SAR. Global preset sets all defaults",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "The stock symbol to analyze"
+          },
+          "interval": {
+            "type": "string",
+            "description": "Time interval for the data",
+            "enum": [
+              "1min",
+              "5min",
+              "15min",
+              "30min",
+              "60min",
+              "daily",
+              "weekly",
+              "monthly"
+            ]
+          },
+          "preset": {
+            "type": "string",
+            "description": "Preset configuration for volatility indicators",
+            "enum": ["fast", "standard", "slow"],
+            "default": "standard"
+          }
+        },
+        "required": ["symbol", "interval"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Volatility indicators data with all indicators in the pack",
+        "properties": {
+          "metadata": {
+            "type": "object",
+            "description": "Metadata about the indicators calculation"
+          },
+          "items": {
+            "type": "array",
+            "description": "Technical indicator values over time",
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": {
+                  "type": "string",
+                  "description": "Date/time of the data point (format: YYYY-MM-DD HH:MM:SS)"
+                },
+                "indicator": {
+                  "type": "string",
+                  "description": "Indicator type: bbands|atr|sar"
+                },
+                "component": {
+                  "type": "string",
+                  "description": "Value component: real_upper_band|real_middle_band|real_lower_band|value"
+                },
+                "value": {
+                  "type": ["number", "string"],
+                  "description": "Indicator value"
+                }
+              },
+              "required": ["timestamp", "indicator", "component", "value"]
+            }
+          }
+        },
+        "required": ["items"]
+      }
+    },
+    {
+      "name": "get_volume_indicators",
+      "description": "Volume/flow pack: OBV, AD, ADOSC. Global preset sets all defaults",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "The stock symbol to analyze"
+          },
+          "interval": {
+            "type": "string",
+            "description": "Time interval for the data",
+            "enum": [
+              "1min",
+              "5min",
+              "15min",
+              "30min",
+              "60min",
+              "daily",
+              "weekly",
+              "monthly"
+            ]
+          },
+          "preset": {
+            "type": "string",
+            "description": "Preset configuration for volume indicators",
+            "enum": ["fast", "standard", "slow"],
+            "default": "standard"
+          }
+        },
+        "required": ["symbol", "interval"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Volume indicators data with all indicators in the pack",
+        "properties": {
+          "metadata": {
+            "type": "object",
+            "description": "Metadata about the indicators calculation"
+          },
+          "items": {
+            "type": "array",
+            "description": "Technical indicator values over time",
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": {
+                  "type": "string",
+                  "description": "Date/time of the data point (format: YYYY-MM-DD HH:MM:SS)"
+                },
+                "indicator": {
+                  "type": "string",
+                  "description": "Indicator type: obv|ad|adosc"
+                },
+                "component": {
+                  "type": "string",
+                  "description": "Value component: usually 'value'; provider may add more components"
+                },
+                "value": {
+                  "type": ["number", "string"],
+                  "description": "Indicator value"
+                }
+              },
+              "required": ["timestamp", "indicator", "component", "value"]
+            }
+          }
+        },
+        "required": ["items"]
+      }
+    }
+  ]
+}

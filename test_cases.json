@@ -1,0 +1,612 @@
+{
+  "test_cases": [
+    {
+      "name": "test_get_current_stock_quote_success",
+      "tool": "get_current_stock_quote",
+      "arguments": {
+        "symbol": "AAPL"
+      },
+      "description": "Test retrieving current stock quote for Apple",
+      "expected_fields": ["quote"],
+      "should_succeed": true
+    },
+
+    {
+      "name": "test_get_stock_time_series_daily_default",
+      "tool": "get_stock_time_series",
+      "arguments": {
+        "symbol": "AAPL"
+      },
+      "description": "Test unified time series with default daily interval",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_stock_time_series_daily_adjusted",
+      "tool": "get_stock_time_series",
+      "arguments": {
+        "symbol": "MSFT",
+        "interval": "daily",
+        "adjusted": true
+      },
+      "description": "Test time series with daily adjusted data",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_stock_time_series_weekly",
+      "tool": "get_stock_time_series",
+      "arguments": {
+        "symbol": "GOOGL",
+        "interval": "weekly",
+        "adjusted": false
+      },
+      "description": "Test time series with weekly interval",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_stock_time_series_monthly_adjusted",
+      "tool": "get_stock_time_series",
+      "arguments": {
+        "symbol": "TSLA",
+        "interval": "monthly",
+        "adjusted": true
+      },
+      "description": "Test time series with monthly adjusted data",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_stock_time_series_intraday_5min",
+      "tool": "get_stock_time_series",
+      "arguments": {
+        "symbol": "NVDA",
+        "interval": "5min",
+        "extended_hours": false
+      },
+      "description": "Test time series with 5-minute intraday data",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_stock_time_series_intraday_60min",
+      "tool": "get_stock_time_series",
+      "arguments": {
+        "symbol": "IBM",
+        "interval": "60min",
+        "outputsize": "full"
+      },
+      "description": "Test time series with hourly intraday data and full output",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_stock_time_series_invalid_interval",
+      "tool": "get_stock_time_series",
+      "arguments": {
+        "symbol": "AAPL",
+        "interval": "invalid_interval"
+      },
+      "description": "Test time series with invalid interval (should fail)",
+      "expected_fields": [],
+      "should_succeed": false
+    },
+    {
+      "name": "test_lookup_stock_symbol_success",
+      "tool": "lookup_stock_symbol",
+      "arguments": {
+        "keywords": "Apple"
+      },
+      "description": "Test searching for symbols using company name",
+      "expected_fields": ["keywords", "total_matches", "matches"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_global_markets_status_success",
+      "tool": "get_global_markets_status",
+      "arguments": {},
+      "description": "Test fetching global markets status",
+      "expected_fields": ["endpoint", "markets"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_trend_indicators_standard",
+      "tool": "get_trend_indicators",
+      "arguments": {
+        "symbol": "AAPL",
+        "interval": "daily",
+        "preset": "standard"
+      },
+      "description": "Test trend indicators pack with standard preset",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_trend_indicators_fast",
+      "tool": "get_trend_indicators",
+      "arguments": {
+        "symbol": "MSFT",
+        "interval": "daily",
+        "preset": "fast"
+      },
+      "description": "Test trend indicators pack with fast preset",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_momentum_indicators_standard",
+      "tool": "get_momentum_indicators",
+      "arguments": {
+        "symbol": "TSLA",
+        "interval": "daily",
+        "preset": "standard"
+      },
+      "description": "Test momentum indicators pack with standard preset",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_momentum_indicators_slow",
+      "tool": "get_momentum_indicators",
+      "arguments": {
+        "symbol": "GOOGL",
+        "interval": "daily",
+        "preset": "slow"
+      },
+      "description": "Test momentum indicators pack with slow preset",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_volatility_indicators_standard",
+      "tool": "get_volatility_indicators",
+      "arguments": {
+        "symbol": "AMZN",
+        "interval": "daily",
+        "preset": "standard"
+      },
+      "description": "Test volatility indicators pack with standard preset",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_volatility_indicators_fast",
+      "tool": "get_volatility_indicators",
+      "arguments": {
+        "symbol": "NVDA",
+        "interval": "daily",
+        "preset": "fast"
+      },
+      "description": "Test volatility indicators pack with fast preset",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_volume_indicators_standard",
+      "tool": "get_volume_indicators",
+      "arguments": {
+        "symbol": "META",
+        "interval": "daily",
+        "preset": "standard"
+      },
+      "description": "Test volume indicators pack with standard preset",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_volume_indicators_slow",
+      "tool": "get_volume_indicators",
+      "arguments": {
+        "symbol": "NFLX",
+        "interval": "daily",
+        "preset": "slow"
+      },
+      "description": "Test volume indicators pack with slow preset",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_financial_statements_all",
+      "tool": "get_financial_statements",
+      "arguments": {
+        "symbol": "AAPL"
+      },
+      "description": "Test unified financial statements with all statements",
+      "expected_fields": [
+        "symbol",
+        "income_statement",
+        "balance_sheet",
+        "cash_flow"
+      ],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_financial_statements_income_only",
+      "tool": "get_financial_statements",
+      "arguments": {
+        "symbol": "MSFT",
+        "statement_type": "income"
+      },
+      "description": "Test financial statements with income statement only",
+      "expected_fields": ["symbol", "annualReports", "quarterlyReports"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_financial_statements_balance_only",
+      "tool": "get_financial_statements",
+      "arguments": {
+        "symbol": "GOOGL",
+        "statement_type": "balance"
+      },
+      "description": "Test financial statements with balance sheet only",
+      "expected_fields": ["symbol", "annualReports", "quarterlyReports"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_financial_statements_cash_flow_only",
+      "tool": "get_financial_statements",
+      "arguments": {
+        "symbol": "TSLA",
+        "statement_type": "cash_flow"
+      },
+      "description": "Test financial statements with cash flow only",
+      "expected_fields": [],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_financial_statements_invalid_type",
+      "tool": "get_financial_statements",
+      "arguments": {
+        "symbol": "AAPL",
+        "statement_type": "invalid_statement"
+      },
+      "description": "Test financial statements with invalid statement type (should fail)",
+      "expected_fields": [],
+      "should_succeed": false
+    },
+    {
+      "name": "test_get_historical_options_aapl",
+      "tool": "get_historical_options",
+      "arguments": {
+        "symbol": "AAPL",
+        "date": "2023-12-15"
+      },
+      "description": "Test historical options data for Apple",
+      "expected_fields": [],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_historical_options_msft",
+      "tool": "get_historical_options",
+      "arguments": {
+        "symbol": "MSFT",
+        "date": "2023-12-15"
+      },
+      "description": "Test historical options data for Microsoft",
+      "expected_fields": [],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_historical_options_missing_date",
+      "tool": "get_historical_options",
+      "arguments": {
+        "symbol": "AAPL"
+      },
+      "description": "Test historical options with missing required date parameter (should fail)",
+      "expected_fields": [],
+      "should_succeed": false
+    },
+    {
+      "name": "test_get_top_gainers_losers_success",
+      "tool": "get_top_gainers_losers",
+      "arguments": {},
+      "description": "Test top gainers, losers and most actively traded stocks",
+      "expected_fields": [
+        "metadata",
+        "top_gainers",
+        "top_losers",
+        "most_actively_traded"
+      ],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_news_sentiment_success",
+      "tool": "get_news_sentiment",
+      "arguments": {
+        "tickers": ["AAPL", "MSFT"]
+      },
+      "description": "Test news sentiment analysis for specific tickers",
+      "expected_fields": ["items", "feed"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_stock_insider_transactions_success",
+      "tool": "get_stock_insider_transactions",
+      "arguments": {
+        "symbol": "AAPL"
+      },
+      "description": "Test getting stock insider transactions",
+      "expected_fields": [],
+      "should_succeed": true
+    },
+    {
+      "name": "test_analyze_stocks_fixed_window",
+      "tool": "analyze_stocks",
+      "arguments": {
+        "symbols": ["AAPL", "MSFT"],
+        "interval": "DAILY",
+        "calculations": ["MEAN", "STDDEV", "MAX", "MIN"],
+        "series_range": "full",
+        "ohlc": "close"
+      },
+      "description": "Test stock analytics with fixed window (default)",
+      "expected_fields": [],
+      "should_succeed": true
+    },
+    {
+      "name": "test_analyze_stocks_sliding_window",
+      "tool": "analyze_stocks",
+      "arguments": {
+        "symbols": ["GOOGL"],
+        "interval": "DAILY",
+        "calculations": ["MEAN", "VARIANCE(annualized=True)"],
+        "series_range": "6month",
+        "window_size": 20
+      },
+      "description": "Test stock analytics with sliding window",
+      "expected_fields": [],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_symbol_overview",
+      "tool": "get_symbol_overview",
+      "arguments": {
+        "symbol": "AAPL",
+        "profile_type": "company"
+      },
+      "description": "Test getting symbol overview information",
+      "expected_fields": ["Symbol", "Name", "Description"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_earning_data_basic",
+      "tool": "get_earning_data",
+      "arguments": {
+        "symbol": "MSFT"
+      },
+      "description": "Test getting earnings data for a stock symbol",
+      "expected_fields": ["symbol", "annual_earnings", "quarterly_earnings"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_earning_data_with_quarter",
+      "tool": "get_earning_data",
+      "arguments": {
+        "symbol": "AAPL",
+        "quarter": "2024-Q1"
+      },
+      "description": "Test getting earnings data with specific quarter parameter",
+      "expected_fields": ["symbol", "annual_earnings", "quarterly_earnings"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_corporate_actions_aapl",
+      "tool": "get_corporate_actions",
+      "arguments": {
+        "symbol": "AAPL"
+      },
+      "description": "Test comprehensive corporate actions for AAPL",
+      "expected_fields": ["symbol", "dividends", "splits"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_corporate_actions_msft",
+      "tool": "get_corporate_actions",
+      "arguments": {
+        "symbol": "MSFT"
+      },
+      "description": "Test comprehensive corporate actions for MSFT",
+      "expected_fields": ["symbol", "dividends", "splits"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_market_calendar_earnings_only",
+      "tool": "get_market_calendar",
+      "arguments": {
+        "horizon": "3month",
+        "with_ipos": false
+      },
+      "description": "Test market calendar with earnings only",
+      "expected_fields": ["horizon", "with_ipos", "earnings", "ipos"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_market_calendar_with_ipos",
+      "tool": "get_market_calendar",
+      "arguments": {
+        "with_ipos": true
+      },
+      "description": "Test market calendar with both earnings and IPO data",
+      "expected_fields": ["horizon", "with_ipos", "earnings", "ipos"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_listing_status_active",
+      "tool": "get_listing_status",
+      "arguments": {
+        "state": "active"
+      },
+      "description": "Test retrieving active listing status",
+      "expected_fields": ["state", "listings"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_current_fx_rate_success",
+      "tool": "get_current_fx_rate",
+      "arguments": {
+        "from_currency": "USD",
+        "to_currency": "EUR"
+      },
+      "description": "Test retrieving current USD to EUR exchange rate",
+      "expected_fields": [
+        "from_currency_code",
+        "to_currency_code",
+        "exchange_rate"
+      ],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_fx_time_series_daily",
+      "tool": "get_fx_time_series",
+      "arguments": {
+        "from_symbol": "EUR",
+        "to_symbol": "USD",
+        "interval": "daily"
+      },
+      "description": "Test historical FX time series with daily interval",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_fx_time_series_intraday",
+      "tool": "get_fx_time_series",
+      "arguments": {
+        "from_symbol": "GBP",
+        "to_symbol": "USD",
+        "interval": "60min"
+      },
+      "description": "Test historical FX time series with intraday interval",
+      "expected_fields": [],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_current_crypto_quote_success",
+      "tool": "get_current_crypto_quote",
+      "arguments": {
+        "symbol": "BTC",
+        "market": "USD"
+      },
+      "description": "Test retrieving Bitcoin current market quote",
+      "expected_fields": [
+        "symbol",
+        "name",
+        "market",
+        "market_name",
+        "last_refreshed",
+        "time_zone",
+        "current_quote"
+      ],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_crypto_time_series_daily",
+      "tool": "get_crypto_time_series",
+      "arguments": {
+        "symbol": "ETH",
+        "market": "USD",
+        "interval": "daily"
+      },
+      "description": "Test historical crypto time series with daily interval",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_crypto_time_series_intraday",
+      "tool": "get_crypto_time_series",
+      "arguments": {
+        "symbol": "BTC",
+        "market": "USD",
+        "interval": "60min"
+      },
+      "description": "Test historical crypto time series with intraday interval",
+      "expected_fields": ["metadata", "items"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_commodities_success",
+      "tool": "get_commodities",
+      "arguments": {
+        "interval": "monthly",
+        "commodity": "all"
+      },
+      "description": "Test fetching global commodities data",
+      "expected_fields": ["interval", "commodity", "data"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_growth_metrics_success",
+      "tool": "get_growth_metrics",
+      "arguments": {
+        "frequency": "quarterly",
+        "seasonally_adjusted": true
+      },
+      "description": "Test growth metrics including real GDP and GDP per capita",
+      "expected_fields": ["frequency", "seasonally_adjusted", "data"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_rates_yields_success",
+      "tool": "get_rates_yields",
+      "arguments": {
+        "maturities": ["10year", "2year"],
+        "include_target_range": true,
+        "frequency": "monthly"
+      },
+      "description": "Test treasury yields and federal funds rate",
+      "expected_fields": ["frequency", "yield_basis", "maturities", "data"],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_prices_inflation_success",
+      "tool": "get_prices_inflation",
+      "arguments": {
+        "include_core": false,
+        "frequency": "monthly",
+        "seasonally_adjusted": true
+      },
+      "description": "Test CPI and inflation data",
+      "expected_fields": [
+        "frequency",
+        "seasonally_adjusted",
+        "include_core",
+        "annualized",
+        "data"
+      ],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_labor_activity_success",
+      "tool": "get_labor_activity",
+      "arguments": {
+        "include_demand": true,
+        "frequency": "monthly",
+        "seasonally_adjusted": true
+      },
+      "description": "Test labor market data with demand indicators",
+      "expected_fields": [
+        "frequency",
+        "seasonally_adjusted",
+        "include_demand",
+        "data"
+      ],
+      "should_succeed": true
+    },
+    {
+      "name": "test_get_labor_activity_basic",
+      "tool": "get_labor_activity",
+      "arguments": {
+        "include_demand": false,
+        "frequency": "monthly"
+      },
+      "description": "Test basic labor market data without demand indicators",
+      "expected_fields": [
+        "frequency",
+        "seasonally_adjusted",
+        "include_demand",
+        "data"
+      ],
+      "should_succeed": true
+    }
+  ]
+}

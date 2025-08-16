@@ -1,0 +1,655 @@
+# Alpha Vantage MCP Server Development Rules
+
+## 🎯 Purpose
+This document provides development guidelines for the Alpha Vantage MCP Server, which provides comprehensive financial data access through the Model Context Protocol. Follow these rules to ensure consistent code quality and proper financial data handling.
+
+## 🏦 PROJECT OVERVIEW
+
+This MCP server provides access to Alpha Vantage's financial APIs including:
+- Real-time and historical stock data
+- Technical indicators with preset configurations  
+- Fundamental company data and financials
+- Market intelligence and news sentiment
+- Forex and cryptocurrency data
+- Economic indicators and commodities
+- Advanced analytics and statistical calculations
+
+## ⚠️ CRITICAL DEVELOPMENT RULES
+
+### 1. Financial Data Handling
+**✅ Always validate financial parameters:**
+```python
+# Stock symbols must be uppercase and valid
+if not symbol or not symbol.isalpha():
+    raise ValueError("Symbol must be a valid stock ticker")
+symbol = symbol.upper()
+
+# Date validation for historical data
+from datetime import datetime
+try:
+    datetime.strptime(date, "%Y-%m-%d")
+except ValueError:
+    raise ValueError("Date must be in YYYY-MM-DD format")
+```
+
+### 2. API Rate Limiting & Error Handling
+**🚨 CRITICAL - Always respect Alpha Vantage rate limits:**
+```python
+import asyncio
+from typing import Dict, Any
+
+async def api_call_with_retry(func, **kwargs) -> Dict[str, Any]:
+    """Handle rate limiting and retries for Alpha Vantage API calls."""
+    try:
+        result = await func(**kwargs)
+        # Check for rate limit response
+        if isinstance(result, dict) and "Note" in result:
+            # Rate limited - wait and retry
+            await asyncio.sleep(60)  
+            result = await func(**kwargs)
+        return result
+    except Exception as e:
+        logger.error(f"API call failed: {e}")
+        raise ValueError(f"Alpha Vantage API error: {str(e)}")
+```
+
+### 3. Financial Tool Implementation Pattern
+Always follow this structure for financial data tools:
+```python
+async def get_financial_data(symbol: str, interval: str = "daily", **kwargs) -> Dict[str, Any]:
+    """
+    Financial data tool with comprehensive validation and error handling.
+    
+    Args:
+        symbol: Stock ticker symbol (e.g., 'AAPL')
+        interval: Data interval ('daily', 'weekly', 'monthly', '1min', '5min', etc.)
+        **kwargs: Additional parameters specific to the data type
+    
+    Returns:
+        Structured financial data matching the tool's outputSchema
+    """
+    # 1. Input validation
+    if not symbol:
+        raise ValueError("Symbol is required")
+    
+    symbol = symbol.upper().strip()
+    if not symbol.isalpha() or len(symbol) > 5:
+        raise ValueError("Invalid stock symbol format")
+    
+    # 2. API call with error handling
+    try:
+        result = await api_helpers.fetch_data(symbol=symbol, interval=interval, **kwargs)
+        
+        # 3. Data validation and cleaning
+        if not result or "Error Message" in str(result):
+            raise ValueError(f"No data available for symbol {symbol}")
+        
+        # 4. Return structured response
+        return normalize_financial_data(result)
+        
+    except Exception as e:
+        logger.error(f"Error fetching data for {symbol}: {e}")
+        raise ValueError(f"Failed to fetch data: {str(e)}")
+
+# Register in TOOL_FUNCTIONS
+TOOL_FUNCTIONS = {
+    "get_financial_data": get_financial_data,
+}
+```
+
+## 📁 PROJECT STRUCTURE & FILES
+
+### 1. `alpha_vantage_mcp_server/tools.json` 📋
+**Purpose:** Complete tool schema definitions for all 25+ financial tools
+**Current State:** Production-ready schemas for all Alpha Vantage tools
+**Key Features:**
+- Comprehensive input validation for financial parameters
+- Structured output schemas with clean field names
+- Support for multiple data intervals and formats
+- Built-in parameter validation and defaults
+
+**Example Financial Tool Schema:**
+```json
+{
+  "name": "get_stock_time_series",
+  "description": "Retrieve historical stock price data with multiple interval options",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "symbol": {
+        "type": "string",
+        "description": "Stock ticker symbol (e.g., 'AAPL', 'MSFT')"
+      },
+      "interval": {
+        "type": "string",
+        "description": "Data frequency",
+        "enum": ["1min", "5min", "15min", "30min", "60min", "daily", "weekly", "monthly"],
+        "default": "daily"
+      },
+      "adjusted": {
+        "type": "boolean",
+        "description": "Apply dividend/split adjustments",
+        "default": false
+      }
+    },
+    "required": ["symbol"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "metadata": {"type": "object"},
+      "items": {
+        "type": "array",
+        "description": "Time series data sorted from earliest to latest"
+      }
+    }
+  }
+}
+```
+
+### 2. `alpha_vantage_mcp_server/handlers.py` 🛠️
+**Purpose:** Unified financial tool implementations
+**Current State:** 25+ production-ready financial tools with comprehensive error handling
+**Key Components:**
+- Unified functions for different data categories (stocks, forex, crypto, etc.)
+- Preset configurations for technical indicators  
+- Clean data normalization and key formatting
+- Comprehensive input validation and error handling
+- Statistical analysis and analytics tools
+
+**Key Development Patterns:**
+```python
+# Import structure
+from typing import Any, Dict, List, Optional, Union
+from .api_helpers import fetch_time_series_daily, fetch_quote, etc.
+
+# Unified tool example
+async def get_stock_time_series(
+    symbol: str, 
+    interval: str = "daily", 
+    adjusted: bool = False, 
+    **kwargs
+) -> Dict[str, Any]:
+    """Unified time series function with comprehensive validation."""
+    
+    # Input validation
+    symbol = symbol.upper().strip()
+    if not symbol.isalpha():
+        raise ValueError("Invalid symbol format")
+    
+    # Route to appropriate API function
+    if interval in ["1min", "5min", "15min", "30min", "60min"]:
+        raw_data = await fetch_intraday(symbol, interval, **kwargs)
+    else:
+        raw_data = await fetch_time_series_daily(symbol, **kwargs)
+    
+    # Normalize and return clean data
+    return normalize_time_series_data(raw_data)
+
+# Complete tool mapping (25+ tools)
+TOOL_FUNCTIONS = {
+    "get_current_stock_quote": get_current_stock_quote,
+    "get_stock_time_series": get_stock_time_series,
+    # ... all other financial tools
+}
+```
+
+### 3. `alpha_vantage_mcp_server/server.py` ⚙️
+**Purpose:** MCP server implementation for Alpha Vantage
+**Current State:** Production-ready server with comprehensive tool loading
+**Configuration:**
+```python
+server = Server("AlphaVantageAPI")
+# Server version: 0.1.0
+# Logger: "AlphaVantageMCP"
+# Tool loading: Dynamic from tools.json
+# Error handling: Comprehensive with structured responses
+```
+
+### 4. `alpha_vantage_mcp_server/api_helpers.py` 🔌
+**Purpose:** Alpha Vantage API client functions
+**Current State:** 100+ helper functions covering all API endpoints
+**Key Features:**
+- Individual API endpoint wrappers
+- Rate limiting and error handling
+- Response format normalization
+- Environment variable configuration
+
+### 5. `test_cases.json` 🧪
+**Purpose:** Comprehensive test scenarios for all financial tools
+**Current State:** 60+ test cases covering all tool categories
+**Coverage:**
+- Success cases for all 25+ tools
+- Error handling and validation tests
+- Different parameter combinations
+- Schema validation tests
+
+**Example Financial Test Case:**
+```json
+{
+  "name": "test_get_stock_time_series_daily",
+  "tool": "get_stock_time_series",
+  "arguments": {
+    "symbol": "AAPL",
+    "interval": "daily",
+    "adjusted": false
+  },
+  "description": "Test daily stock time series for Apple",
+  "expected_fields": ["metadata", "items"],
+  "should_succeed": true
+}
+```
+
+### 6. `pyproject.toml` ⚙️
+**Purpose:** Project configuration for Alpha Vantage MCP Server
+**Current Configuration:**
+```toml
+[project]
+name = "alpha-vantage-mcp-server"
+version = "0.1.0"
+description = "Alpha Vantage MCP Server - Comprehensive financial data"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=1.6.0",
+    "httpx>=0.28.1",      # For API calls
+    "python-dotenv>=1.0.0", # For environment variables
+    "jsonschema>=4.0.0",  # For schema validation
+]
+
+[project.scripts]
+alpha-vantage-mcp-server = "alpha_vantage_mcp_server.__main__:main"
+```
+
+## 🔐 ENVIRONMENT CONFIGURATION
+
+### Required Environment Variables:
+```bash
+# Alpha Vantage API Key (required)
+ALPHA_VANTAGE_KEY=your_alpha_vantage_api_key_here
+
+# Optional: Debug mode
+DEBUG=false
+
+# Optional: API base URL override
+ALPHA_VANTAGE_BASE_URL=https://www.alphavantage.co/query
+```
+
+### Rate Limiting Considerations:
+- **Free Tier**: 25 requests per day, 5 requests per minute
+- **Premium Plans**: Higher limits starting at $49.99/month
+- Always implement proper error handling for rate limit responses
+
+## 🔧 DEVELOPMENT GUIDELINES
+
+### Adding New Financial Tools
+When adding new tools to the Alpha Vantage server:
+
+1. **Add API Helper Function** (`api_helpers.py`):
+```python
+async def fetch_new_financial_data(symbol: str, **params) -> Dict[str, Any]:
+    """Fetch new type of financial data."""
+    # Implementation with proper error handling
+```
+
+2. **Create Unified Tool Function** (`handlers.py`):
+```python
+async def get_new_financial_data(symbol: str, **kwargs) -> Dict[str, Any]:
+    """Unified tool with validation and normalization."""
+    # Input validation, API call, data normalization
+```
+
+3. **Add Schema Definition** (`tools.json`):
+```json
+{
+  "name": "get_new_financial_data",
+  "description": "Clear description of financial data provided",
+  "inputSchema": { /* comprehensive validation */ },
+  "outputSchema": { /* structured response format */ }
+}
+```
+
+4. **Add Test Cases** (`test_cases.json`):
+```json
+{
+  "name": "test_new_financial_data_success",
+  "tool": "get_new_financial_data",
+  "arguments": { /* valid test parameters */ },
+  "should_succeed": true
+}
+```
+
+5. **Update Tool Mapping** (`handlers.py`):
+```python
+TOOL_FUNCTIONS = {
+    # ... existing tools
+    "get_new_financial_data": get_new_financial_data,
+}
+```
+
+### Data Normalization Standards
+All financial data should follow consistent formatting:
+
+```python
+def normalize_financial_data(raw_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize Alpha Vantage response to clean format."""
+    return {
+        "metadata": {
+            "symbol": clean_symbol(raw_data),
+            "last_refreshed": format_timestamp(raw_data),
+            "time_zone": extract_timezone(raw_data),
+        },
+        "items": [
+            {
+                "date": format_date(timestamp),
+                "open": str(values.get("open", "")),
+                "high": str(values.get("high", "")),
+                "low": str(values.get("low", "")),
+                "close": str(values.get("close", "")),
+                "volume": str(values.get("volume", "")),
+            }
+            for timestamp, values in sorted_time_series_items
+        ]
+    }
+```
+
+## 🧪 TESTING GUIDELINES
+
+### Running Tests
+```bash
+# Run comprehensive test suite
+uv run python test_server.py
+
+# Test specific tool category
+uv run python test_server.py --filter "stock"
+
+# Run with API key validation
+ALPHA_VANTAGE_KEY=your_key uv run python test_server.py
+```
+
+### Test Coverage Requirements
+- ✅ Input validation (required parameters, format validation)
+- ✅ Output schema compliance (field presence, data types)
+- ✅ Error handling (invalid symbols, rate limits)
+- ✅ Edge cases (market holidays, delisted stocks)
+- ✅ Different parameter combinations (intervals, ranges)
+
+## 💡 FINANCIAL DATA BEST PRACTICES
+
+### Symbol Validation
+```python
+def validate_symbol(symbol: str) -> str:
+    """Validate and normalize stock symbol."""
+    if not symbol:
+        raise ValueError("Symbol is required")
+    
+    symbol = symbol.upper().strip()
+    
+    # Basic validation
+    if not symbol.isalpha() or len(symbol) > 5:
+        raise ValueError("Invalid symbol format")
+    
+    # Check for common invalid symbols
+    invalid_symbols = ["NULL", "NONE", "TEST"]
+    if symbol in invalid_symbols:
+        raise ValueError(f"Invalid symbol: {symbol}")
+    
+    return symbol
+```
+
+### Date/Time Handling
+```python
+from datetime import datetime, date
+
+def validate_date_parameter(date_str: str) -> str:
+    """Validate date format for historical data."""
+    try:
+        parsed_date = datetime.strptime(date_str, "%Y-%m-%d")
+        
+        # Don't allow future dates
+        if parsed_date.date() > date.today():
+            raise ValueError("Date cannot be in the future")
+        
+        return date_str
+    except ValueError:
+        raise ValueError("Date must be in YYYY-MM-DD format")
+```
+
+### Error Response Standards
+```python
+def create_error_response(error_msg: str, error_code: str = "API_ERROR") -> Dict[str, Any]:
+    """Create standardized error response."""
+    return {
+        "error": {
+            "code": error_code,
+            "message": error_msg,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    }
+```
+
+## 📊 TOOL CATEGORIES & ORGANIZATION
+
+### Core Market Data (4 tools)
+- `get_current_stock_quote` - Real-time quotes
+- `get_stock_time_series` - Historical price data
+- `lookup_stock_symbol` - Symbol search
+- `get_global_markets_status` - Market status
+
+### Technical Analysis (4 indicator packs)
+- `get_trend_indicators` - SMA, EMA, WMA, MACD
+- `get_momentum_indicators` - RSI, Stochastic, CCI, MFI
+- `get_volatility_indicators` - Bollinger Bands, ATR, SAR
+- `get_volume_indicators` - OBV, A/D Line, A/D Oscillator
+
+### Fundamental Data (4 tools)
+- `get_symbol_overview` - Company profiles
+- `get_financial_statements` - Income/balance/cash flow
+- `get_earning_data` - Earnings history
+- `get_corporate_actions` - Dividends and splits
+
+### Market Intelligence (4 tools)
+- `get_news_sentiment` - AI news analysis
+- `get_top_gainers_losers` - Market movers
+- `get_stock_insider_transactions` - Insider trading
+- `analyze_stocks` - Statistical analysis
+
+### Economic & Alternative Data (9 tools)
+- `get_current_fx_rate` - Currency rates
+- `get_fx_time_series` - Forex history
+- `get_current_crypto_quote` - Crypto quotes
+- `get_crypto_time_series` - Crypto history
+- `get_commodities` - Commodities data
+- `get_growth_metrics` - GDP data
+- `get_rates_yields` - Treasury yields
+- `get_prices_inflation` - CPI/inflation
+- `get_labor_activity` - Employment data
+
+### Market Calendar (3 tools)
+- `get_market_calendar` - Earnings calendar
+- `get_listing_status` - Listing information
+- `get_historical_options` - Options data
+
+## ⚠️ COMMON FINANCIAL DATA PITFALLS
+
+### ❌ DON'T:
+1. **Ignore rate limits** - Always handle Alpha Vantage rate limiting
+2. **Skip symbol validation** - Validate and normalize all symbols
+3. **Hardcode API keys** - Use environment variables only
+4. **Ignore market hours** - Account for market closures and holidays
+5. **Mix data formats** - Keep consistent field naming (snake_case)
+6. **Cache indefinitely** - Financial data becomes stale quickly
+7. **Ignore error responses** - Alpha Vantage returns specific error formats
+
+### ✅ DO:
+1. **Respect rate limits** - Implement proper retry logic with delays
+2. **Validate financial parameters** - Symbols, dates, intervals
+3. **Normalize data consistently** - Use unified response formats
+4. **Handle market closures** - Graceful handling of no-data scenarios
+5. **Use proper error handling** - Structured error responses
+6. **Document financial concepts** - Clear descriptions for financial terms
+7. **Test with real market data** - Use actual symbols and dates
+8. **Follow financial data standards** - OHLCV format, timestamp handling
+9. **Implement preset configurations** - Simplify technical indicator usage
+
+## 🚀 DEVELOPMENT WORKFLOW
+
+### Daily Development Tasks
+```bash
+# 1. Pull latest changes
+git pull origin main
+
+# 2. Install/update dependencies
+uv sync
+
+# 3. Run tests before changes
+uv run python test_server.py
+
+# 4. Make your changes...
+
+# 5. Run tests after changes
+uv run python test_server.py
+
+# 6. Test with actual API key
+ALPHA_VANTAGE_KEY=your_key uv run python test_server.py
+
+# 7. Run the server locally
+uv run python main.py
+```
+
+### Adding New Features
+1. **Plan the tool** - Define what financial data it will provide
+2. **Design the schema** - Input validation and output structure
+3. **Implement API helper** - Add function to `api_helpers.py`
+4. **Create unified tool** - Add to `handlers.py` with validation
+5. **Add schema** - Update `tools.json`
+6. **Write tests** - Add test cases to `test_cases.json`
+7. **Test thoroughly** - Run all tests and verify manually
+8. **Update documentation** - Add to README if significant
+
+## 📊 SCHEMA FORMAT REFERENCE
+
+### Correct Schema Format:
+```json
+{
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "Input text",
+        "minLength": 1,
+        "maxLength": 1000
+      },
+      "count": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 10
+      },
+      "options": {
+        "type": "array",
+        "items": {"type": "string"}
+      }
+    },
+    "required": ["text"]
+  }
+}
+```
+
+### Schema Types:
+- `string` - Text values
+- `integer` - Whole numbers
+- `number` - Decimal numbers  
+- `boolean` - true/false
+- `object` - Nested structures
+- `array` - Lists of items
+
+### Schema Constraints:
+- `required` - Required fields array
+- `default` - Default values
+- `minimum`/`maximum` - Number ranges
+- `minLength`/`maxLength` - String length
+- `pattern` - Regex patterns
+- `enum` - Allowed values
+
+## 📝 MCP CLIENT CONFIGURATION
+
+### Claude Desktop Configuration
+Add this to your Claude Desktop configuration file:
+
+```json
+{
+  "mcpServers": {
+    "alpha-vantage": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/yourusername/alpha-vantage-mcp-server",
+        "alpha-vantage-mcp-server"
+      ],
+      "env": {
+        "ALPHA_VANTAGE_KEY": "your_alpha_vantage_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### Local Development Configuration
+For local development and testing:
+
+```json
+{
+  "mcpServers": {
+    "alpha-vantage-local": {
+      "command": "uv",
+      "args": ["run", "python", "main.py"],
+      "cwd": "/path/to/alpha-vantage-mcp-server",
+      "env": {
+        "ALPHA_VANTAGE_KEY": "your_api_key"
+      }
+    }
+  }
+}
+```
+
+## 🔗 USEFUL COMMANDS
+
+```bash
+# Development setup
+uv sync && uv run python test_server.py
+
+# Run with API key
+ALPHA_VANTAGE_KEY=your_key uv run python main.py
+
+# Build for distribution
+uv build
+
+# Install from source
+pip install -e .
+
+# Run specific tests
+uv run python test_server.py | grep "stock_time_series"
+```
+
+## 🔗 HELPFUL RESOURCES
+
+### Financial Data & APIs
+- [Alpha Vantage Documentation](https://www.alphavantage.co/documentation/)
+- [Alpha Vantage API Key Registration](https://www.alphavantage.co/support/#api-key)
+- [Financial Data Standards](https://en.wikipedia.org/wiki/Open_High_Low_Close_Chart)
+
+### MCP & Development
+- [MCP Specification](https://github.com/modelcontextprotocol)
+- [JSON Schema Documentation](https://json-schema.org/learn/getting-started-step-by-step)
+- [Python Async Programming](https://realpython.com/async-io-python/)
+- [UV Package Manager](https://github.com/astral-sh/uv)
+
+### Financial Concepts
+- [Technical Indicators Guide](https://www.investopedia.com/technical-analysis-4427738)
+- [Fundamental Analysis](https://www.investopedia.com/fundamental-analysis-4689757)
+- [Market Data Terminology](https://www.investopedia.com/financial-term-dictionary-4769738)
+
+---
+
+**Remember:** This Alpha Vantage MCP server provides comprehensive financial data access. Always validate financial parameters, respect API rate limits, and ensure data consistency across all tools. The server is production-ready with 25+ financial tools covering stocks, forex, crypto, technical analysis, and economic indicators.
