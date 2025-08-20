@@ -83,7 +83,7 @@
             "default": "compact"
           },
           "month": {
-            "type": "string",
+            "type": ["string", "null"],
             "description": "Target month for intraday data in YYYY-MM format (e.g., '2024-03')",
             "pattern": "^\\d{4}-\\d{2}$"
           },
@@ -93,7 +93,7 @@
             "default": true
           }
         },
-        "required": ["symbol"]
+        "required": ["symbol", "month"]
       },
       "outputSchema": {
         "type": "object",
@@ -527,7 +527,7 @@
             "minItems": 1
           },
           "topics": {
-            "type": "array",
+            "type": ["array", "null"],
             "items": {
               "type": "string",
               "enum": [
@@ -551,12 +551,12 @@
             "description": "News topics to filter by"
           },
           "start_time": {
-            "type": "string",
+            "type": ["string", "null"],
             "description": "Start time for news analysis (YYYYMMDDTHHMM format)",
             "pattern": "^\\d{8}T\\d{4}$"
           },
           "end_time": {
-            "type": "string",
+            "type": ["string", "null"],
             "description": "End time for news analysis (YYYYMMDDTHHMM format)",
             "pattern": "^\\d{8}T\\d{4}$"
           },
@@ -567,7 +567,7 @@
             "default": "LATEST"
           }
         },
-        "required": ["tickers"]
+        "required": ["tickers", "topics", "start_time", "end_time"]
       },
       "outputSchema": {
         "type": "object",
@@ -836,11 +836,10 @@
           "window_size": {
             "type": ["integer", "null"],
             "description": "Sliding window length (data points). Omit or set null for fixed-window over the entire range. If provided, must be >= 10.",
-            "minimum": 10,
-            "default": null
+            "minimum": 10
           }
         },
-        "required": ["symbols", "interval", "calculations", "series_range"]
+        "required": ["symbols", "interval", "calculations", "window_size"]
       },
       "outputSchema": {
         "type": "object",
@@ -1212,12 +1211,12 @@
             "description": "The stock symbol to fetch earnings data for"
           },
           "quarter": {
-            "type": "string",
+            "type": ["string", "null"],
             "description": "Optional specific quarter to focus on (e.g., '2024-Q1', '2023-Q4'). If not provided, returns all available earnings data.",
             "pattern": "^\\d{4}-Q[1-4]$"
           }
         },
-        "required": ["symbol"]
+        "required": ["symbol", "quarter"]
       },
       "outputSchema": {
         "type": "object",
@@ -1361,7 +1360,7 @@
         "type": "object",
         "properties": {
           "symbol": {
-            "type": "string",
+            "type": ["string", "null"],
             "description": "Stock symbol for earnings calendar (optional, if not provided returns all upcoming earnings)"
           },
           "horizon": {
@@ -1375,7 +1374,8 @@
             "description": "Include IPO calendar data in addition to earnings calendar",
             "default": false
           }
-        }
+        },
+        "required": ["symbol"]
       },
       "outputSchema": {
         "type": "object",
@@ -1473,7 +1473,7 @@
         "type": "object",
         "properties": {
           "date": {
-            "type": "string",
+            "type": ["string", "null"],
             "description": "Date for listing status (YYYY-MM-DD format, optional)"
           },
           "state": {
@@ -1482,7 +1482,8 @@
             "enum": ["active", "delisted"],
             "default": "active"
           }
-        }
+        },
+        "required": ["date"]
       },
       "outputSchema": {
         "type": "object",

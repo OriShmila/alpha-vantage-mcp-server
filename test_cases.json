@@ -15,7 +15,8 @@
       "name": "test_get_stock_time_series_daily_default",
       "tool": "get_stock_time_series",
       "arguments": {
-        "symbol": "AAPL"
+        "symbol": "AAPL",
+        "month": null
       },
       "description": "Test unified time series with default daily interval",
       "expected_fields": ["metadata", "items"],
@@ -27,7 +28,8 @@
       "arguments": {
         "symbol": "MSFT",
         "interval": "daily",
-        "adjusted": true
+        "adjusted": true,
+        "month": null
       },
       "description": "Test time series with daily adjusted data",
       "expected_fields": ["metadata", "items"],
@@ -39,7 +41,8 @@
       "arguments": {
         "symbol": "GOOGL",
         "interval": "weekly",
-        "adjusted": false
+        "adjusted": false,
+        "month": null
       },
       "description": "Test time series with weekly interval",
       "expected_fields": ["metadata", "items"],
@@ -51,7 +54,8 @@
       "arguments": {
         "symbol": "TSLA",
         "interval": "monthly",
-        "adjusted": true
+        "adjusted": true,
+        "month": null
       },
       "description": "Test time series with monthly adjusted data",
       "expected_fields": ["metadata", "items"],
@@ -63,7 +67,8 @@
       "arguments": {
         "symbol": "NVDA",
         "interval": "5min",
-        "extended_hours": false
+        "extended_hours": false,
+        "month": null
       },
       "description": "Test time series with 5-minute intraday data",
       "expected_fields": ["metadata", "items"],
@@ -75,7 +80,8 @@
       "arguments": {
         "symbol": "IBM",
         "interval": "60min",
-        "outputsize": "full"
+        "outputsize": "full",
+        "month": null
       },
       "description": "Test time series with hourly intraday data and full output",
       "expected_fields": ["metadata", "items"],
@@ -86,7 +92,8 @@
       "tool": "get_stock_time_series",
       "arguments": {
         "symbol": "AAPL",
-        "interval": "invalid_interval"
+        "interval": "invalid_interval",
+        "month": null
       },
       "description": "Test time series with invalid interval (should fail)",
       "expected_fields": [],
@@ -314,7 +321,10 @@
       "name": "test_get_news_sentiment_success",
       "tool": "get_news_sentiment",
       "arguments": {
-        "tickers": ["AAPL", "MSFT"]
+        "tickers": ["AAPL", "MSFT"],
+        "topics": null,
+        "start_time": null,
+        "end_time": null
       },
       "description": "Test news sentiment analysis for specific tickers",
       "expected_fields": ["items", "feed"],
@@ -338,7 +348,8 @@
         "interval": "DAILY",
         "calculations": ["MEAN", "STDDEV", "MAX", "MIN"],
         "series_range": "full",
-        "ohlc": "close"
+        "ohlc": "close",
+        "window_size": null
       },
       "description": "Test stock analytics with fixed window (default)",
       "expected_fields": [],
@@ -373,7 +384,8 @@
       "name": "test_get_earning_data_basic",
       "tool": "get_earning_data",
       "arguments": {
-        "symbol": "MSFT"
+        "symbol": "MSFT",
+        "quarter": null
       },
       "description": "Test getting earnings data for a stock symbol",
       "expected_fields": ["symbol", "annual_earnings", "quarterly_earnings"],
@@ -415,6 +427,7 @@
       "tool": "get_market_calendar",
       "arguments": {
         "horizon": "3month",
+        "symbol": null,
         "with_ipos": false
       },
       "description": "Test market calendar with earnings only",
@@ -425,7 +438,8 @@
       "name": "test_get_market_calendar_with_ipos",
       "tool": "get_market_calendar",
       "arguments": {
-        "with_ipos": true
+        "with_ipos": true,
+        "symbol": null
       },
       "description": "Test market calendar with both earnings and IPO data",
       "expected_fields": ["horizon", "with_ipos", "earnings", "ipos"],
@@ -435,7 +449,8 @@
       "name": "test_get_listing_status_active",
       "tool": "get_listing_status",
       "arguments": {
-        "state": "active"
+        "state": "active",
+        "date": null
       },
       "description": "Test retrieving active listing status",
       "expected_fields": ["state", "listings"],
